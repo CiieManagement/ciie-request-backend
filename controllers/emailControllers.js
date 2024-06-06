@@ -1,3 +1,5 @@
+// backend/emailController.js
+
 const expressAsyncHandler = require("express-async-handler");
 const dotenv = require("dotenv");
 const nodemailer = require("nodemailer");
@@ -24,7 +26,12 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
     emails = [emails]; // Convert to array if it's a single email
   }
 
-  emails.forEach(email => {
+  // Filter emails to send to those ending with '@stu.srmuniversity.ac.in'
+  const filteredEmails = emails.filter(email => {
+    return email.toLowerCase().endsWith('@stu.srmuniversity.ac.in');
+  });
+
+  filteredEmails.forEach(email => {
     var mailOptions = {
       from: process.env.SMTP_MAIL,
       to: email,
