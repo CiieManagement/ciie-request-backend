@@ -25,6 +25,9 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
   if (Array.isArray(emails)) {
     // Filter emails based on domain
     filteredEmails = emails.filter(email => email.endsWith('@stu.srmuniversity.ac.in'));
+  } else if (emails.includes('everyone@stu.srmuniversity.ac.in')) {
+    // Add logic to fetch all emails with @stu.srmuniversity.ac.in
+    filteredEmails = ['example1@stu.srmuniversity.ac.in', 'example2@stu.srmuniversity.ac.in']; // Replace with actual logic to fetch emails
   } else {
     // Convert to array if it's a single email and filter based on domain
     filteredEmails = [emails].filter(email => email.endsWith('@stu.srmuniversity.ac.in'));
@@ -51,7 +54,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
     });
   });
 
-  res.status(200).send("Emails sent successfully!");
+  res.status(200).json({ message: "Emails sent successfully!" });
 });
 
 module.exports = { sendEmail };
