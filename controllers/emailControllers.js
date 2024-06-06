@@ -14,25 +14,34 @@ let transporter = nodemailer.createTransport({
 });
 
 const sendEmail = expressAsyncHandler(async (req, res) => {
-  const { email, subject, message } = req.body;
-  console.log(email, subject, message);
+  let { emails, subject, message } = req.body;
+  
+  if (!emails) {
+    return res.status(400).send("emails is required");
+  }
 
-  var mailOptions = {
-    from: process.env.SMTP_MAIL,
-    to: email,
-    subject: subject,
-    text: message,
-  };
+  if (!Array.isArray(emails)) {
+    emails = [emails]; // Convert to array if it's a single email
+  }
 
-  console.log(email);
+  emails.forEach(email => {
+    var mailOptions = {
+      from: process.env.SMTP_MAIL,
+      to: email,
+      subject: subject,
+      text: message,
+    };
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent successfully!");
-    }
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(`Email sent successfully to ${email}!`);
+      }
+    });
   });
+
+  res.status(200).send("Emails sent successfully!");
 });
 
 module.exports = { sendEmail };
