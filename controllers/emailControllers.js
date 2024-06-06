@@ -26,12 +26,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
     emails = [emails]; // Convert to array if it's a single email
   }
 
-  // Filter emails to send to those ending with '@stu.srmuniversity.ac.in'
-  const filteredEmails = emails.filter(email => {
-    return email.toLowerCase().endsWith('@stu.srmuniversity.ac.in');
-  });
-
-  filteredEmails.forEach(email => {
+  emails.forEach(email => {
     var mailOptions = {
       from: process.env.SMTP_MAIL,
       to: email,
