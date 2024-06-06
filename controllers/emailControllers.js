@@ -1,30 +1,28 @@
-// backend/emailController.js
+// emailController.js
 
-const expressAsyncHandler = require("express-async-handler");
-const dotenv = require("dotenv");
-const nodemailer = require("nodemailer");
+const expressAsyncHandler = require('express-async-handler');
+const dotenv = require('dotenv');
+const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
+const User = require('../models/User'); // Ensure you have the correct path
+
 dotenv.config();
 
-// Dummy data - Replace this with your actual database query
-const studentEmails = [
-  'student1@stu.srmuniversity.ac.in',
-  'student2@stu.srmuniversity.ac.in',
-  'student3@stu.srmuniversity.ac.in',
-];
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_MAIL, // generated ethereal user
-    pass: process.env.SMTP_PASSWORD, // generated ethereal password
+    user: process.env.SMTP_MAIL,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
 const sendEmail = expressAsyncHandler(async (req, res) => {
   let { emails, subject, message } = req.body;
-  
+
   if (!emails) {
     return res.status(400).send("emails is required");
   }
@@ -33,8 +31,16 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
     emails = [emails]; // Convert to array if it's a single email
   }
 
+  // Check for special case of sending to all students
+  if (emails.includes('everyone@stu.srmuniversity.ac.in')) {
+    const studentEmails = await User.find({ email: /@stu\.srmuniversity\.ac\.in$/ }).select('email -_id');
+    const studentEmailList = studentEmails.map(user => user.email);
+    emails = emails.filter(email => email !== 'everyone@stu.srmuniversity.ac.in');
+    emails.push(...studentEmailList);
+  }
+
   emails.forEach(email => {
-    var mailOptions = {
+    const mailOptions = {
       from: process.env.SMTP_MAIL,
       to: email,
       subject: subject,
@@ -53,13 +59,4 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
   res.status(200).send("Emails sent successfully!");
 });
 
-const fetchStudentsEmails = expressAsyncHandler(async (req, res) => {
-  try {
-    // Replace with your actual database call
-    res.status(200).json(studentEmails);
-  } catch (error) {
-    res.status(500).send("Error fetching student emails");
-  }
-});
-
-module.exports = { sendEmail, fetchStudentsEmails };
+module.exports = { sendEmail };
