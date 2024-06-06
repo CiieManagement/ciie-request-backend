@@ -1,5 +1,3 @@
-// emailController.js
-
 const expressAsyncHandler = require('express-async-handler');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
@@ -31,27 +29,21 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
     emails = [emails]; // Convert to array if it's a single email
   }
 
-  // Check for special case of sending to all students
-  if (emails.includes('everyone@stu.srmuniversity.ac.in')) {
-    try {
-      const studentEmails = await User.find({ email: /@stu\.srmuniversity\.ac\.in$/ }).select('email -_id');
-      const studentEmailList = studentEmails.map(user => user.email);
-      console.log("Student emails fetched: ", studentEmailList);
-      
-      if (studentEmailList.length === 0) {
-        return res.status(404).send("No student emails found with @stu.srmuniversity.ac.in domain");
-      }
+  // Efficiently handle "everyone@stu.srmuniversity.ac.in" case
+  const studentEmails = emails.includes('everyone@stu.srmuniversity.ac.in') ?
+    await User.find({ email: /@stu\.srmuniversity\.ac\.in$/ }).select('email -_id') : [];
 
-      emails = emails.filter(email => email !== 'everyone@stu.srmuniversity.ac.in');
-      emails.push(...studentEmailList);
-      console.log("Final email list: ", emails);
-    } catch (error) {
-      console.error("Error fetching student emails: ", error);
-      return res.status(500).send("Error fetching student emails");
-    }
+  const studentEmailList = studentEmails.map(user => user.email);
+
+  // Combine student emails with other specified emails (if any)
+  const finalEmails = emails.filter(email => email !== 'everyone@stu.srmuniversity.ac.in');
+  finalEmails.push(...studentEmailList);
+
+  if (finalEmails.length === 0) {
+    return res.status(404).send("No email addresses provided");
   }
 
-  emails.forEach(email => {
+  finalEmails.forEach(email => {
     const mailOptions = {
       from: process.env.SMTP_MAIL,
       to: email,
