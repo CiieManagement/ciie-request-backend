@@ -5,6 +5,13 @@ const dotenv = require("dotenv");
 const nodemailer = require("nodemailer");
 dotenv.config();
 
+// Dummy data - Replace this with your actual database query
+const studentEmails = [
+  'student1@stu.srmuniversity.ac.in',
+  'student2@stu.srmuniversity.ac.in',
+  'student3@stu.srmuniversity.ac.in',
+];
+
 let transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -46,4 +53,13 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
   res.status(200).send("Emails sent successfully!");
 });
 
-module.exports = { sendEmail };
+const fetchStudentsEmails = expressAsyncHandler(async (req, res) => {
+  try {
+    // Replace with your actual database call
+    res.status(200).json(studentEmails);
+  } catch (error) {
+    res.status(500).send("Error fetching student emails");
+  }
+});
+
+module.exports = { sendEmail, fetchStudentsEmails };
