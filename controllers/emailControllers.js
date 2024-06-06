@@ -14,17 +14,27 @@ let transporter = nodemailer.createTransport({
 });
 
 const sendEmail = expressAsyncHandler(async (req, res) => {
-  let { emails, subject, message } = req.body;
+  const { emails, subject, message } = req.body;
   
   if (!emails) {
     return res.status(400).send("emails is required");
   }
 
-  if (!Array.isArray(emails)) {
-    emails = [emails]; // Convert to array if it's a single email
+  let filteredEmails = [];
+
+  if (Array.isArray(emails)) {
+    // Filter emails based on domain
+    filteredEmails = emails.filter(email => email.endsWith('@stu.srmuniversity.ac.in'));
+  } else {
+    // Convert to array if it's a single email and filter based on domain
+    filteredEmails = [emails].filter(email => email.endsWith('@stu.srmuniversity.ac.in'));
   }
 
-  emails.forEach(email => {
+  if (filteredEmails.length === 0) {
+    return res.status(400).send("No valid emails found for the specified domain");
+  }
+
+  filteredEmails.forEach(email => {
     var mailOptions = {
       from: process.env.SMTP_MAIL,
       to: email,
