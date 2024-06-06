@@ -33,10 +33,22 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
 
   // Check for special case of sending to all students
   if (emails.includes('everyone@stu.srmuniversity.ac.in')) {
-    const studentEmails = await User.find({ email: /@stu\.srmuniversity\.ac\.in$/ }).select('email -_id');
-    const studentEmailList = studentEmails.map(user => user.email);
-    emails = emails.filter(email => email !== 'everyone@stu.srmuniversity.ac.in');
-    emails.push(...studentEmailList);
+    try {
+      const studentEmails = await User.find({ email: /@stu\.srmuniversity\.ac\.in$/ }).select('email -_id');
+      const studentEmailList = studentEmails.map(user => user.email);
+      console.log("Student emails fetched: ", studentEmailList);
+      
+      if (studentEmailList.length === 0) {
+        return res.status(404).send("No student emails found with @stu.srmuniversity.ac.in domain");
+      }
+
+      emails = emails.filter(email => email !== 'everyone@stu.srmuniversity.ac.in');
+      emails.push(...studentEmailList);
+      console.log("Final email list: ", emails);
+    } catch (error) {
+      console.error("Error fetching student emails: ", error);
+      return res.status(500).send("Error fetching student emails");
+    }
   }
 
   emails.forEach(email => {
@@ -49,7 +61,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
 
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.log(error);
+        console.log(`Error sending email to ${email}: `, error);
       } else {
         console.log(`Email sent successfully to ${email}!`);
       }
