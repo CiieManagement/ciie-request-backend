@@ -26,7 +26,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
 
   emails.forEach(email => {
     var mailOptions = {
-      from: process.env.SMTP_MAIL,
+      from: "ciie@srmuniversity.ac.in",
       to: email,
       subject: subject,
       text: message,
